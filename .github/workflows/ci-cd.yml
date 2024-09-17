@@ -2,9 +2,9 @@ name: CI/CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 env:
   DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   BACKEND_IMAGE_NAME: backend
@@ -51,7 +51,7 @@ jobs:
   build-and-push:
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'  # Only build and push for the main branch
+    if: github.ref == 'refs/heads/master'  # Only build and push for the main branch
     steps:
     - uses: actions/checkout@v2
     - name: Log in to Docker Hub
