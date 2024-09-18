@@ -9,6 +9,7 @@ env:
   DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
   BACKEND_IMAGE_NAME: backend
   FRONTEND_IMAGE_NAME: frontend
+  EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
 
 jobs:
   test:
@@ -65,3 +66,33 @@ jobs:
         docker build -t $DOCKER_HUB_USERNAME/$FRONTEND_IMAGE_NAME:latest ./frontend
         docker push $DOCKER_HUB_USERNAME/$BACKEND_IMAGE_NAME:latest
         docker push $DOCKER_HUB_USERNAME/$FRONTEND_IMAGE_NAME:latest
+  
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Replace placeholder IP in Nginx configs
+      run: |
+        sed -i 's/EC2_PUBLIC_IP/${{ secrets.EC2_PUBLIC_IP }}/g' nginx/nginx.conf
+        sed -i 's/EC2_PUBLIC_IP/${{ secrets.EC2_PUBLIC_IP }}/g' frontend/nginx.conf
+
+    - name: Deploy to EC2
+      env:
+        PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
+        HOST_NAME: ${{ secrets.EC2_HOST_NAME }}
+        USER_NAME: ${{ secrets.EC2_USER_NAME }}
+      run: |
+        echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+        scp -o StrictHostKeyChecking=no -i private_key nginx/nginx.conf ${USER_NAME}@${HOST_NAME}:~/nginx.conf
+        scp -o StrictHostKeyChecking=no -i private_key frontend/nginx.conf ${USER_NAME}@${HOST_NAME}:~/frontend-nginx.conf
+        ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOST_NAME} '
+          docker pull dhinucphilip/backend:latest
+          docker pull dhinucphilip/frontend:latest
+          mv ~/nginx.conf ./nginx/nginx.conf
+          mv ~/frontend-nginx.conf ./frontend/nginx.conf
+          docker compose up -d
+          docker system prune -af
+        '
