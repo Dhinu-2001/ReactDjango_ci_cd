@@ -88,11 +88,15 @@ jobs:
         echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
         scp -o StrictHostKeyChecking=no -i private_key nginx/nginx.conf ${USER_NAME}@${HOST_NAME}:~/nginx.conf
         scp -o StrictHostKeyChecking=no -i private_key frontend/nginx.conf ${USER_NAME}@${HOST_NAME}:~/frontend-nginx.conf
+        scp -o StrictHostKeyChecking=no -i private_key docker-compose.yml ${USER_NAME}@${HOST_NAME}:~/docker-compose.yml
         ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOST_NAME} '
+          mkdir -p ~/nginx ~/frontend
+          mv ~/nginx.conf ~/nginx/nginx.conf
+          mv ~/frontend-nginx.conf ~/frontend/nginx.conf
+          sudo usermod -aG docker $USER
+          newgrp docker
           docker pull dhinucphilip/backend:latest
           docker pull dhinucphilip/frontend:latest
-          mv ~/nginx.conf ./nginx/nginx.conf
-          mv ~/frontend-nginx.conf ./frontend/nginx.conf
           docker compose up -d
           docker system prune -af
         '
