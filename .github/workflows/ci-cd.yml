@@ -95,8 +95,8 @@ jobs:
           mv ~/frontend-nginx.conf ~/frontend/nginx.conf
           sudo usermod -aG docker $USER
           newgrp docker
-          docker pull ${{ env.DOCKER_HUB_USERNAME }}/${{ env.BACKEND_IMAGE_NAME }}:latest
-          docker pull ${{ env.DOCKER_HUB_USERNAME }}/${{ env.FRONTEND_IMAGE_NAME }}:latest
+          docker pull dhinucphilip/backend:latest
+          docker pull dhinucphilip/frontend:latest
           docker compose up -d
           docker system prune -af
         '
