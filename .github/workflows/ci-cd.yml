@@ -84,11 +84,12 @@ jobs:
         PRIVATE_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
         HOST_NAME: ${{ secrets.EC2_HOST_NAME }}
         USER_NAME: ${{ secrets.EC2_USER_NAME }}
+        HOST_EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
       run: |
         echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
         scp -o StrictHostKeyChecking=no -i private_key nginx/nginx.conf ${USER_NAME}@${HOST_NAME}:~/nginx.conf
         scp -o StrictHostKeyChecking=no -i private_key frontend/nginx.conf ${USER_NAME}@${HOST_NAME}:~/frontend-nginx.conf
-        ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOST_NAME} '
+        ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOST_EC2_PUBLIC_IP} '
           docker pull dhinucphilip/backend:latest
           docker pull dhinucphilip/frontend:latest
           mv ~/nginx.conf ./nginx/nginx.conf
